@@ -1,11 +1,22 @@
 <script>
 	import Axios from "axios";
+	import Transaction from "./components/Transaction.svelte";
+	import SummaryCard from "./components/SummaryCard.svelte";
 	import { onMount } from "svelte";
-	import { each } from "svelte/internal";
 
 	let input = 0;
 	let typeOfTransaction = "income";
 	let transactions = [];
+
+	$: disabled = !input;
+	$: balance = transactions.reduce((acc, t) => acc + t.value, 0);
+	$: income = transactions
+		.filter((t) => t.value > 0)
+		.reduce((acc, t) => acc + t.value, 0);
+
+	$: expenses = transactions
+		.filter((t) => t.value < 0)
+		.reduce((acc, t) => acc + t.value, 0);
 
 	onMount(async () => {
 		const { data } = await Axios.get("api/transactions");
@@ -55,17 +66,25 @@
 				placeholder="Amount of money" />
 		</p>
 		<p class="control">
-			<button class="button" on:click={addTransaction}> Save </button>
+			<button class="button" on:click={addTransaction} {disabled}>
+				Save
+			</button>
 		</p>
 	</div>
+
+	<SummaryCard mode="balance" value={balance} />
+
+	<div class="columns">
+		<div class="column">
+			<SummaryCard mode="income" value={income} />
+		</div>
+		<div class="column">
+			<SummaryCard mode="expenses" value={expenses} />
+		</div>
+	</div>
+
 	<hr />
 	{#each transactions as transaction (transaction._id)}
-		<div
-			class="notification {transaction.value > 0 ? 'is-success' : 'is-danger'}">
-			{transaction.value}
-			<button
-				class="delete"
-				on:click={() => removeTransaction(transaction._id)} />
-		</div>
+		<Transaction {transaction} {removeTransaction} />
 	{/each}
 </div>
