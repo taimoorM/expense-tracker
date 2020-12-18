@@ -4,27 +4,24 @@
 	import SummaryCard from "./components/SummaryCard.svelte";
 	import Loading from "./components/Loading.svelte";
 	import { onMount } from "svelte";
+	import {
+		transactions,
+		sortedTransactions,
+		income,
+		expenses,
+		balance,
+	} from "./stores";
 
 	let input = 0;
 	let typeOfTransaction = "income";
-	let transactions = [];
 	let loading = false;
 
-	$: sortedTransactions = transactions.sort((a, b) => b.date - a.date);
 	$: disabled = !input;
-	$: balance = transactions.reduce((acc, t) => acc + t.value, 0);
-	$: income = transactions
-		.filter((t) => t.value > 0)
-		.reduce((acc, t) => acc + t.value, 0);
-
-	$: expenses = transactions
-		.filter((t) => t.value < 0)
-		.reduce((acc, t) => acc + t.value, 0);
 
 	onMount(async () => {
 		loading = true;
 		const { data } = await Axios.get("api/transactions");
-		transactions = data;
+		$transactions = data;
 		loading = false;
 	});
 
@@ -34,14 +31,14 @@
 			value: typeOfTransaction === "income" ? input : input * -1,
 		};
 		const response = await Axios.post("/api/transactions", transaction);
-		transactions = [response.data, ...transactions];
+		$transactions = [response.data, ...$transactions];
 		input = 0;
 	}
 
 	async function removeTransaction(id) {
 		const response = await Axios.delete("/api/transactions/" + id);
 		if (response.data.id === id) {
-			transactions = transactions.filter((t) => t._id !== id);
+			$transactions = $transactions.filter((t) => t._id !== id);
 		}
 	}
 </script>
@@ -79,15 +76,15 @@
 	{#if loading}
 		<Loading />
 	{/if}
-	{#if transactions.length > 0}
-		<SummaryCard mode="balance" value={balance} />
+	{#if $transactions.length > 0}
+		<SummaryCard mode="balance" value={$balance} />
 
 		<div class="columns">
 			<div class="column">
-				<SummaryCard mode="income" value={income} />
+				<SummaryCard mode="income" value={$income} />
 			</div>
 			<div class="column">
-				<SummaryCard mode="expenses" value={expenses} />
+				<SummaryCard mode="expenses" value={$expenses} />
 			</div>
 		</div>
 
@@ -96,7 +93,7 @@
 		<div class="notification">Add your income or expenses above</div>
 	{/if}
 
-	{#each sortedTransactions as transaction (transaction._id)}
+	{#each $sortedTransactions as transaction (transaction._id)}
 		<Transaction {transaction} {removeTransaction} />
 	{/each}
 </div>

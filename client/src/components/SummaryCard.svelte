@@ -19,6 +19,5 @@
 
 <div class="notification {cssClass} is-light has-text-centered">
     <strong>{label}: </strong>
-    $
-    {value}
+    ${value}
 </div>
