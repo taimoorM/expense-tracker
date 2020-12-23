@@ -6,6 +6,7 @@ const bodyParser = require("body-parser");
 const morgan = require("morgan");
 const { port, mongoURI } = require("./config");
 const transactionsRoutes = require("./routes/transactions");
+const path = require("path");
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -22,6 +23,11 @@ mongoose
 
 app.use("/api/transactions", transactionsRoutes);
 
-app.get("/", (req, res) => res.send("hello world"));
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static("client/public"));
+  app.get("*", (req, res) => {
+    res.sendFile(path.resolve(__dirname, "client", "public", "index.html"));
+  });
+}
 
 app.listen(port, () => console.log("express is running at port " + port));

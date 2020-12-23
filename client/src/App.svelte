@@ -46,7 +46,7 @@
 <style>
 	.app {
 		margin: 40px auto;
-		max-width: 500px;
+		max-width: 500px !important;
 	}
 </style>
 
